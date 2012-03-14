@@ -126,11 +126,22 @@ sub extrude_path {
     
     # retract if distance from previous position is greater or equal to the one
     # specified by the user *and* to the maximum distance between infill lines
+    
+    #This may be what's causing the moves between infill islands to not retract. FIXME!
     {
         my $distance_from_last_pos = $self->last_pos->distance_to($path->points->[0]) * $Slic3r::scaling_factor;
         my $distance_threshold = $Slic3r::retract_before_travel;
-        $distance_threshold = 2 * $Slic3r::flow_width / $Slic3r::fill_density * sqrt(2)
-            if $Slic3r::fill_density > 0 && $description =~ /fill/;
+        
+        # X distance between lines for reticlinear is calculated using: 
+        # distance_between_lines = (flow_spacing/resolution) / fill_density
+        # Only substitute this for the user val IF the fill spacing is greater
+        
+#        if ($Slic3r::fill_density > 0 && $description =~ /fill/) {
+#           my $distance_between_lines_check = (scale $Slic3r::flow_spacing) / $Slic3r::fill_density;
+#        
+#           $distance_threshold = $distance_between_lines_check
+#                if $distance_between_lines_check > $distance_threshold;
+#        }
     
         if ($distance_from_last_pos >= $distance_threshold) {
             $gcode .= $self->retract(travel_to => $path->points->[0]);
